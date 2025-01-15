@@ -4,6 +4,10 @@ USE TCGame;
 
 DROP DATABASE TCGame;
 
+insert into userinventory (user_id, card_id) VALUES(1, 1);
+
+SELECT * From userinventory where user_id = 1;
+
 -- USERS TABLE: Stores user account information
 CREATE TABLE Users (
     user_id SERIAL PRIMARY KEY,

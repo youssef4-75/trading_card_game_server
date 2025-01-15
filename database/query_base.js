@@ -1,11 +1,10 @@
-export function getPasswordPQuery(email) {
+export function getPasswordQuery(email) {
     return `
     SELECT password
     FROM Users
     WHERE email = '${email}';
 `
 }
-
 
 export function getCreatingQuery(email, password, username) {
     return `
@@ -28,28 +27,6 @@ FROM
 WHERE 
     email = '${email}';`
 }
-
-export function getUserInventoryQuery(email) {
-    return `
-SELECT 
-    c.card_id,
-    c.name AS card_name,
-    c.rarity,
-    c.image_url,
-    c.description
-FROM 
-    UserInventory ui
-JOIN 
-    Users u ON ui.user_id = u.user_id
-JOIN 
-    Cards c ON ui.card_id = c.card_id
-WHERE 
-    u.email = '${email}';
-
-
-`
-}
-
 
 export function getUpdateQuery(email, username, display_name, profile_url, description) {
     return `
@@ -91,7 +68,7 @@ GROUP BY
 `
 }
 
-export function createTradeQuery(email){
+export function createTradeQuery(email) {
     return `
 INSERT INTO Trades (initiator_user_id, status)
 SELECT U.user_id, 'pending'
@@ -100,12 +77,10 @@ WHERE U.email = '${email}';
 `
 }
 
-export function addCardsToTrade(trade_id, cards, offered){
-    // cards: is a list of object that represent cards, each card need to obligatory contains its id
-    // trade_id is apparently an id, a number in other words
+export function addCardsToTrade(trade_id, cards, offered) {
     let res = ``;
     cards.forEach(element => {
-        res +=  `${element},`       
+        res += `${element},`
     });
     res += `-1`;
     return `
@@ -127,7 +102,7 @@ WHERE
 `;
 }
 
-export function giveMeMyLastTradeId(email){
+export function giveMeMyLastTradeId(email) {
     return `
 SELECT T.trade_id
 FROM Trades T
@@ -139,7 +114,7 @@ HAVING COUNT(TC.trade_card_id) = 0;
 
 }
 
-export function turnNamesToNumbers(loc){
+export function turnNamesToNumbers(loc) {
     let res = ``
     loc.forEach(cardName => {
         res += `"${cardName}", `
@@ -156,66 +131,72 @@ WHERE name IN (${res});
 
 }
 
-
-export function getUserCardOwnershipQuery(email, cardNames) {
-    const cardNamesList = cardNames.map(name => `'${name}'`).join(", ");
-    return `
-      SELECT U.user_id, U.email, U.username
-      FROM Users U
-      JOIN UserInventory UI ON U.user_id = UI.user_id
-      JOIN Cards C ON UI.card_id = C.card_id
-      WHERE U.email = '${email}'
-        AND C.name IN (${cardNamesList})
-      GROUP BY U.user_id
-      HAVING COUNT(DISTINCT C.card_id) = ${cardNames.length};
-    `;
-}
-
-
-export function* getSwitchOwnershipQuery(email, display_name, offeredCards, requestedCards, trade_id) {
-    const offeredCardsList = offeredCards.map(name => `'${name}'`).join(", ");
-    const requestedCardsList = requestedCards.map(name => `'${name}'`).join(", ");
-  
-    yield `
-      SET @receiver_id = (SELECT user_id FROM Users WHERE email = '${email}');
-    `;
-
-    yield `
-      SET @giver_id = (SELECT user_id FROM Users WHERE display_name = '${display_name}');
-    `;
-
-    yield `
-      UPDATE UserInventory
-      SET user_id = @receiver_id
-      WHERE user_id = @giver_id
-        AND card_id IN (
-          SELECT card_id FROM Cards WHERE name IN (${offeredCardsList})
-        );
-
-    `;
-
-    yield `
-      UPDATE UserInventory
-      SET user_id = @giver_id
-      WHERE user_id = @receiver_id
-        AND card_id IN (
-          SELECT card_id FROM Cards WHERE name IN (${requestedCardsList})
-        );
-    `;
-
-    yield `
-    UPDATE Trades
-    SET status = 'accepted'
-    WHERE trade_id = ${trade_id};
-  `;
-  }
-
-  
-export function distribute17Query(){
+export function distribute17Query() {
     return `
 INSERT INTO UserInventory (user_id, card_id)
 SELECT user_id, 17
 FROM Users;
+
+`
+}
+
+export function getIdFromEmailQuery(email) {
+    return `SELECT user_id FROM Users WHERE email = '${email}'`;
+}
+
+export function getIdFromTradeQuery(trade_id) {
+    return `SELECT initiator_user_id AS giver_id FROM Trades WHERE trade_id = ${trade_id}`
+}
+
+export function getCardsListQuery(trade_id) {
+    return `
+        SELECT 
+            card_id, 
+            offered 
+        FROM 
+            TradeCards 
+        WHERE 
+            trade_id = ${trade_id}
+`
+}
+
+export function transfertCardQuery(to_id, from_id, this_card_id, count) {
+    return `
+        UPDATE UserInventory
+        SET user_id = ${to_id}
+        WHERE user_id = ${from_id}
+        AND card_id = ${this_card_id}
+        LIMIT ${count}
+`
+}
+
+export function checkOwnership(user_id) {
+    return `
+        SELECT card_id, COUNT(*) AS count
+        FROM UserInventory
+        WHERE user_id = ${user_id}
+        GROUP BY card_id
+    `
+}
+
+
+export function getUserInventoryQuery(email) {
+    return `
+SELECT 
+    c.card_id,
+    c.name AS card_name,
+    c.rarity,
+    c.image_url,
+    c.description
+FROM 
+    UserInventory ui
+JOIN 
+    Users u ON ui.user_id = u.user_id
+JOIN 
+    Cards c ON ui.card_id = c.card_id
+WHERE 
+    u.email = '${email}';
+
 
 `
 }
