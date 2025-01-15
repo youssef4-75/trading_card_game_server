@@ -1,4 +1,5 @@
 import mysql from 'mysql';
+import readline from 'readline';
 
 
 
@@ -47,8 +48,26 @@ export async function execute(query) {
 
 
 export function end(){
-    console.log('ended connection to Mysql database')
+    console.log('nded connection to Mysql database')
     connection.end();
 }
 
 //  end();
+
+
+
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+console.log("Press 'e' to quit or any other key to trigger an action.");
+
+process.stdin.on('keypress', (str, key) => {
+  if (key && key.name === 'e') {
+    end();
+    rl.close();
+    process.exit(0); // Exit the program
+  }
+});
