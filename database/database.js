@@ -1,8 +1,8 @@
 import mysql from 'mysql';
 import readline from 'readline';
 
-
-
+// // Access environment variables
+// const database_url = process.env.DURL;
  
 const connection = mysql.createConnection({
     host: 'localhost',      
@@ -26,7 +26,7 @@ connect();
 
  
 
-export async function execute(query) {
+async function execute(query) {
     try {
         const results = await new Promise((resolve, reject) => {
             connection.query(query, (error, results, fields) => {
@@ -47,7 +47,7 @@ export async function execute(query) {
 
 
 
-export function end(){
+function end(){
     console.log('nded connection to Mysql database')
     connection.end();
 }

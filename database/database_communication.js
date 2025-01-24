@@ -1,5 +1,5 @@
 import { alphabet, numbers } from "../util/__vars.js";
-import { execute } from "./database.js";
+import { execute } from "./databasePG.js";
 import {
     addCardsToTrade,
     checkOwnership,

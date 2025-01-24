@@ -1,4 +1,4 @@
-import { execute } from "../database/database.js";
+import { execute } from "../database/databasePG.js";
 import { getUserInventoryQuery } from "../database/query_base.js";
 import { getEmailFromToken } from "../security/tokenization.js";
 
