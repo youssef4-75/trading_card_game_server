@@ -4,7 +4,7 @@ import cors from 'cors';
 import { lookForAuthentication, saveProfile, sendingProfileData } from './core/profiles.js';
 import { acceptTrade, addNewTrades, sendAllTradesToUser } from './core/trades.js';
 import { getInventory } from './core/inventory.js';
-import { distribute17Root, setupTriggers } from './database/database_communication.js';
+import { distribute17Root, fillCards, setupTriggers } from './database/database_communication.js';
 
 
 
