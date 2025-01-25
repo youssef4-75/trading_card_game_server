@@ -6,7 +6,7 @@ import readline from 'readline';
 const pool = new Pool({
     host: 'dpg-cu9t3vtsvqrc73dkcn30-a',
     user: 'ucf',
-    password: 'WCCKy4WgcCw797WV9gqylGQOSd6ZF4eC',
+    password: process.env.password,
     database: 'trading_card_game_db',
     port: 5432,
 });
