@@ -89,10 +89,10 @@ export async function checkAndPopulateDatabase() {
             WHERE table_schema = 'public'
         `);
 
-        if (result.rows.length === 0) {
+        console.log(result);
+        if (!result||!result.rows||result.rows.length === 0) {
             console.log('Database is empty. Populating now...');
 
-            // Execute multiple queries to populate the database
             const queries = [
                 `
     CREATE TABLE Users (
