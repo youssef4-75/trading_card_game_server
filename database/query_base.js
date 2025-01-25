@@ -182,3 +182,14 @@ export function getUserInventoryQuery(email) {
         u.email = '${email}';
     `;
 }
+
+
+export function distributeRootQuery(){
+    return `
+INSERT INTO UserInventory (user_id, card_id, is_on_display)
+SELECT 1, card_id, FALSE
+FROM Cards
+ORDER BY RANDOM()
+LIMIT 1;
+`
+}
