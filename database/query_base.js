@@ -147,11 +147,17 @@ export function getCardsListQuery(trade_id) {
 
 export function transfertCardQuery(to_id, from_id, this_card_id, count) {
     return `
-        UPDATE UserInventory
-        SET user_id = ${to_id}
+        WITH updated_rows AS (
+        SELECT inventory_id
+        FROM UserInventory
         WHERE user_id = ${from_id}
         AND card_id = ${this_card_id}
         LIMIT ${count}
+            )
+        UPDATE UserInventory
+        SET user_id = ${to_id}
+        WHERE inventory_id IN (SELECT inventory_id FROM updated_rows);
+
     `;
 }
 
@@ -182,7 +188,6 @@ export function getUserInventoryQuery(email) {
         u.email = '${email}';
     `;
 }
-
 
 export function distributeRootQuery(){
     return `

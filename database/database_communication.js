@@ -1,4 +1,4 @@
-import { alphabet, numbers } from "../util/__vars.js";
+import { alphabet, loop, numbers } from "../util/__vars.js";
 import { execute, end } from "./databasePG.js";
 import {
     addCardsToTrade,
@@ -310,7 +310,7 @@ export async function distribute17Root() {
     } catch (error) {
         console.error("Error 17 ---------------------------------------------------:\n", error);
     }
-    setTimeout(distribute17Root, 24 * 3600 * 1000);
+    setTimeout(distribute17Root, loop * 3600 * 1000);
 }
 
 export async function fillCards() {
