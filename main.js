@@ -105,6 +105,8 @@ saveProfile(app);
 
 setTimeout(distribute17, 24 * 3600 * 1000);
 
+await checkAndPopulateDatabase()
+
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Server is running on https://trading-card-game-server.onrender.com:${port}`);
 });
