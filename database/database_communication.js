@@ -81,6 +81,7 @@ export async function createNewUser(email, psswd, username) {
 
 
 export async function checkAndPopulateDatabase() {
+    return;
     try {
         
         const result = await execute(`
@@ -148,8 +149,6 @@ export async function checkAndPopulateDatabase() {
     } catch (error) {
         console.error('Error while checking or populating the database:', error.message);
     } finally {
-        // Close the database connection
-        await end();
     }
 }
 
