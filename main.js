@@ -32,7 +32,7 @@ saveProfile(app);
 
 setTimeout(distribute17Root, 24 * 3600 * 1000);
 
-await setupTriggers();
+
 
 await fillCards();
 
