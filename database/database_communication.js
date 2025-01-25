@@ -81,43 +81,72 @@ export async function createNewUser(email, psswd, username) {
 
 export async function setupTriggers() {
     try {
-        const addCardToRootTrigger = `
-            CREATE OR REPLACE FUNCTION add_card_to_root()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                INSERT INTO UserInventory (user_id, card_id, is_on_display)
-                VALUES (1, NEW.card_id, FALSE);
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
+        // const addCardToRootTrigger = `
+        //     CREATE OR REPLACE FUNCTION add_card_to_root()
+        //     RETURNS TRIGGER AS $$
+        //     BEGIN
+        //         INSERT INTO UserInventory (user_id, card_id, is_on_display)
+        //         VALUES (1, NEW.card_id, FALSE);
+        //         RETURN NEW;
+        //     END;
+        //     $$ LANGUAGE plpgsql;
 
-            CREATE TRIGGER trigger_add_card_to_root
-            AFTER INSERT ON Cards
-            FOR EACH ROW
-            EXECUTE FUNCTION add_card_to_root();
-        `;
+        //     CREATE TRIGGER trigger_add_card_to_root
+        //     AFTER INSERT ON Cards
+        //     FOR EACH ROW
+        //     EXECUTE FUNCTION add_card_to_root();
+        // `;
 
-        const addCardToNewUserTrigger = `
-            CREATE OR REPLACE FUNCTION add_card_to_new_user()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                INSERT INTO UserInventory (user_id, card_id, is_on_display)
-                VALUES (NEW.user_id, 17, FALSE);
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
+        // const addCardToNewUserTrigger = `
+        //     CREATE OR REPLACE FUNCTION add_card_to_new_user()
+        //     RETURNS TRIGGER AS $$
+        //     BEGIN
+        //         INSERT INTO UserInventory (user_id, card_id, is_on_display)
+        //         VALUES (NEW.user_id, 17, FALSE);
+        //         RETURN NEW;
+        //     END;
+        //     $$ LANGUAGE plpgsql;
 
-            CREATE TRIGGER trigger_add_card_to_new_user
-            AFTER INSERT ON Users
-            FOR EACH ROW
-            EXECUTE FUNCTION add_card_to_new_user();
-        `;
+        //     CREATE TRIGGER trigger_add_card_to_new_user
+        //     AFTER INSERT ON Users
+        //     FOR EACH ROW
+        //     EXECUTE FUNCTION add_card_to_new_user();
+        // `;
 
-        await execute(addCardToRootTrigger);
-        console.log('Trigger to add cards to root user has been created.');
+        const deleteTradeWhenChangingOwner = `
+-- Function to handle the deletion of trades
+CREATE OR REPLACE FUNCTION delete_trades_on_card_owner_change()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Delete all entries from the TradeCards table involving the updated card
+    DELETE FROM TradeCards
+    WHERE card_id = NEW.card_id;
 
-        await execute(addCardToNewUserTrigger);
-        console.log('Trigger to assign card ID 17 to new users has been created.');
+    -- After removing TradeCards entries, delete the trade itself if it has no remaining cards
+    DELETE FROM Trades
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM TradeCards
+        WHERE TradeCards.trade_id = Trades.trade_id
+    );
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to invoke the function on update of user_id in UserInventory
+CREATE TRIGGER on_card_owner_change
+AFTER UPDATE OF user_id ON UserInventory
+FOR EACH ROW
+WHEN (OLD.user_id IS DISTINCT FROM NEW.user_id) -- Ensure trigger activates only if the owner changes
+EXECUTE FUNCTION delete_trades_on_card_owner_change();
+`;
+
+        await execute(deleteTradeWhenChangingOwner);
+        console.log('Trigger to delete trade has been created.');
+
+        // await execute(addCardToNewUserTrigger);
+        // console.log('Trigger to assign card ID 17 to new users has been created.');
     } catch (error) {
         console.error('Error setting up triggers:', error.message);
         await end();
