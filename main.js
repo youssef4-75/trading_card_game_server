@@ -29,7 +29,7 @@ sendingProfileData(app);
 
 saveProfile(app);
 
-setTimeout(distribute17Root, loop * 3600 * 1000);
+setTimeout(distribute17Root, loop *0* 3600 * 1000);
 
 fillCards();
 
