@@ -342,9 +342,9 @@ export async function distribute17Root() {
     setTimeout(distribute17Root, loop * 3600 * 1000);
 }
 
-export async function fillCards() {
-    
+export async function fillCards() {    
     try{
+        await execute(`TRUNCATE TABLE UserInventory, Trades, Cards, TradeCards;`);
         await execute(`
             INSERT INTO Cards (name, description, rarity, image_url) VALUES
             ('Fire Drake', 'A fierce dragon that breathes fire, ruling the skies with dominance.', 'Legendary', 'https://th.bing.com/th/id/OIP.7r01fS8CijyIEOp00gBpogHaF7?w=732&h=586&rs=1&pid=ImgDetMain'),
@@ -381,7 +381,7 @@ export async function fillCards() {
             ('Lunar Dragon', 'A creature of legend that get stronger under a full moon.', 'Epic', 'https://c4.wallpaperflare.com/wallpaper/244/852/45/how-to-train-your-dragon-how-to-train-your-dragon-the-hidden-world-night-fury-toothless-how-to-train-your-dragon-hd-wallpaper-preview.jpg'),
             ('Descartes', 'a French philosopher, scientist, and mathematician, widely considered a seminal figure in the emergence of modern philosophy and science.', 'Legendary', 'https://th.bing.com/th/id/OIP.gYVNtMJ-n8_0i8LVf3TOGwHaK1?w=156&h=180&c=7&r=0&o=5&pid=1.7');
             
-            `);
+        `);
         console.log(`sucess in adding cards`)
     }
     catch(error){
