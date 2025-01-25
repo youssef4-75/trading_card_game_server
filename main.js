@@ -7,8 +7,6 @@ import { getInventory } from './core/inventory.js';
 import { distribute17Root, fillCards, setupTriggers } from './database/database_communication.js';
 import { loop } from './util/__vars.js';
 
-
-
 const app = express();
 
 const port = 3000;

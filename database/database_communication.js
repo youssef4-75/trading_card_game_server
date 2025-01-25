@@ -44,15 +44,6 @@ export async function createNewUser(email, psswd, username) {
         return;
     }
 
-    // if (!check(username, alphabet + numbers) &&
-    //     (username.length < 3 ||
-    //         username.length > 20)) {
-    //     console.log('Username must be between 3 and 20 characters.');
-    //     return;
-    // }
-
-
-
     try {
 
         const checkQuery = getPasswordQuery(email);
@@ -61,7 +52,6 @@ export async function createNewUser(email, psswd, username) {
         if (checkResult.length !== 0) {
             throw new Error('User already exists');
         }
-
 
         const query = getCreatingQuery(email, psswd, username);
         await execute(query);
@@ -75,7 +65,7 @@ export async function createNewUser(email, psswd, username) {
         if (error.code === 'ER_DUP_ENTRY') {
             throw new Error('User with this email or username already exists.');
         }
-        throw new Error('Error creating user.');
+        throw new Error('Error creating user.' + error);
     }
 }
 
@@ -344,7 +334,7 @@ export async function distribute17Root() {
 
 export async function fillCards() {    
     try{
-        await execute(`TRUNCATE TABLE UserInventory, Trades, Cards, TradeCards;`);
+        await execute(`TRUNCATE TABLE UserInventory, Trades, Cards, TradeCards CASCADE;`);
         await execute(`
             INSERT INTO Cards (name, description, rarity, image_url) VALUES
             ('Fire Drake', 'A fierce dragon that breathes fire, ruling the skies with dominance.', 'Legendary', 'https://th.bing.com/th/id/OIP.7r01fS8CijyIEOp00gBpogHaF7?w=732&h=586&rs=1&pid=ImgDetMain'),
