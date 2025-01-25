@@ -4,11 +4,11 @@ import readline from 'readline';
 
 // PostgreSQL connection pool configuration
 const pool = new Pool({
-    host: 'dpg-cu9t3vtsvqrc73dkcn30-a',      
-    user: 'ucf',          
-    password: 'WCCKy4WgcCw797WV9gqylGQOSd6ZF4eC',      
-    database: 'trading_card_game_db',  
-    port: 5432, 
+    host: 'dpg-cu9t3vtsvqrc73dkcn30-a',
+    user: 'ucf',
+    password: 'WCCKy4WgcCw797WV9gqylGQOSd6ZF4eC',
+    database: 'trading_card_game_db',
+    port: 5432,
 });
 
 // Function to connect and test the connection
@@ -36,9 +36,9 @@ export async function execute(query) {
 }
 
 // Function to close the pool connection
-export function end() {
+export async function end() {
     console.log('Ended connection to PostgreSQL database');
-    pool.end();
+    await pool.end();
 }
 
 // Setup readline for quitting the application
