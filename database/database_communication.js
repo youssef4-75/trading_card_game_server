@@ -437,7 +437,7 @@ export async function fillCards() {
 }
 
 export async function emptyDB() {
-    for(table of [`Users`, `UserInventory`, `Cards`, `trades`, `TradeCards`]){
+    for(const table of [`Users`, `UserInventory`, `Cards`, `trades`, `TradeCards`]){
         await execute(`DROP TABLE IF EXISTS ${table} CASCADE`);
         console.log(`successfully deleted the table ${table}`);
     }    
