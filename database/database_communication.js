@@ -71,37 +71,37 @@ export async function createNewUser(email, psswd, username) {
 
 export async function setupTriggers() {
     try {
-        // const addCardToRootTrigger = `
-        //     CREATE OR REPLACE FUNCTION add_card_to_root()
-        //     RETURNS TRIGGER AS $$
-        //     BEGIN
-        //         INSERT INTO UserInventory (user_id, card_id, is_on_display)
-        //         VALUES (1, NEW.card_id, FALSE);
-        //         RETURN NEW;
-        //     END;
-        //     $$ LANGUAGE plpgsql;
+        const addCardToRootTrigger = `
+            CREATE OR REPLACE FUNCTION add_card_to_root()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                INSERT INTO UserInventory (user_id, card_id, is_on_display)
+                VALUES (1, NEW.card_id, FALSE);
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
 
-        //     CREATE TRIGGER trigger_add_card_to_root
-        //     AFTER INSERT ON Cards
-        //     FOR EACH ROW
-        //     EXECUTE FUNCTION add_card_to_root();
-        // `;
+            CREATE TRIGGER trigger_add_card_to_root
+            AFTER INSERT ON Cards
+            FOR EACH ROW
+            EXECUTE FUNCTION add_card_to_root();
+        `;
 
-        // const addCardToNewUserTrigger = `
-        //     CREATE OR REPLACE FUNCTION add_card_to_new_user()
-        //     RETURNS TRIGGER AS $$
-        //     BEGIN
-        //         INSERT INTO UserInventory (user_id, card_id, is_on_display)
-        //         VALUES (NEW.user_id, 17, FALSE);
-        //         RETURN NEW;
-        //     END;
-        //     $$ LANGUAGE plpgsql;
+        const addCardToNewUserTrigger = `
+            CREATE OR REPLACE FUNCTION add_card_to_new_user()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                INSERT INTO UserInventory (user_id, card_id, is_on_display)
+                VALUES (NEW.user_id, 17, FALSE);
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
 
-        //     CREATE TRIGGER trigger_add_card_to_new_user
-        //     AFTER INSERT ON Users
-        //     FOR EACH ROW
-        //     EXECUTE FUNCTION add_card_to_new_user();
-        // `;
+            CREATE TRIGGER trigger_add_card_to_new_user
+            AFTER INSERT ON Users
+            FOR EACH ROW
+            EXECUTE FUNCTION add_card_to_new_user();
+        `;
 
         const deleteTradeWhenChangingOwner = `
 -- Function to handle the deletion of trades
@@ -135,14 +135,71 @@ EXECUTE FUNCTION delete_trades_on_card_owner_change();
         await execute(deleteTradeWhenChangingOwner);
         console.log('Trigger to delete trade has been created.');
 
-        // await execute(addCardToNewUserTrigger);
-        // console.log('Trigger to assign card ID 17 to new users has been created.');
+        await execute(addCardToNewUserTrigger);
+        console.log('Trigger to assign card ID 17 to new users has been created.');
+        
+        await execute(addCardToRootTrigger);
+        console.log('Trigger to assign new cards to root has been created.');
     } catch (error) {
         console.error('Error setting up triggers:', error.message);
         await end();
     }
 }
 
+export async function createTables() {
+
+    await execute(`CREATE TABLE Users (
+    user_id SERIAL PRIMARY KEY,
+    email VARCHAR(30) UNIQUE NOT NULL,
+    password VARCHAR(10),
+    username VARCHAR(50) UNIQUE NOT NULL,
+    display_name VARCHAR(100),
+    profile_icon VARCHAR(255), -- URL or path to the icon
+    description TEXT,
+    inventory_limit INT DEFAULT 3 -- Maximum cards allowed on display
+    );`);
+
+    console.log(`created table: Users`);
+
+    await execute(`CREATE TABLE Cards (
+    card_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    rarity VARCHAR(50), -- Common, Rare, Legendary, etc.
+    image_url VARCHAR(255) -- URL or path to the card image
+    );`);
+
+    console.log(`created table: Cards`);
+
+    await execute(`CREATE TABLE UserInventory (
+    inventory_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES Users(user_id) ON DELETE CASCADE,
+    card_id INT REFERENCES Cards(card_id) ON DELETE CASCADE,
+    is_on_display BOOLEAN DEFAULT FALSE -- Indicates whether the card is displayed
+);`);
+
+    console.log(`created table: UserInventory`);
+
+    await execute(`CREATE TABLE Trades (
+    trade_id SERIAL PRIMARY KEY,
+    initiator_user_id INT REFERENCES Users(user_id) ON DELETE CASCADE,
+    status VARCHAR(20) DEFAULT 'pending', -- pending, accepted, declined
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );`);
+
+    console.log(`created table: Trades`);
+
+    await execute(`CREATE TABLE TradeCards (
+    trade_card_id SERIAL PRIMARY KEY,
+    trade_id INT REFERENCES Trades(trade_id) ON DELETE CASCADE,
+    user_id INT REFERENCES Users(user_id) ON DELETE CASCADE, -- User offering the card
+    card_id INT REFERENCES Cards(card_id) ON DELETE CASCADE,
+    offered BOOLEAN -- TRUE if offered by the user, FALSE if requested
+    );`);
+
+    console.log(`created table: TradeCards`);
+    
+}
 
 export async function loadUserData(email) {
 
@@ -377,4 +434,22 @@ export async function fillCards() {
     catch(error){
         console.log(`couldnt add cards`)
     }
+}
+
+export async function emptyDB() {
+    for(table of [`Users`, `UserInventory`, `Cards`, `trades`, `TradeCards`]){
+        await execute(`DROP TABLE IF EXISTS ${table} CASCADE`);
+        console.log(`successfully deleted the table ${table}`);
+    }    
+}
+
+export async function reinitialize() {
+    await emptyDB();
+
+    await createTables();
+
+    // await setupTriggers();
+
+    // await fillCards();
+
 }
