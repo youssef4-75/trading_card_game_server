@@ -391,7 +391,7 @@ export async function distribute17Root() {
 
 export async function fillCards() {    
     try{
-        await execute(`TRUNCATE TABLE UserInventory, Trades, Cards, TradeCards CASCADE RESTART IDENTITY;`);
+        // await execute(`TRUNCATE TABLE UserInventory, Trades, Cards, TradeCards CASCADE RESTART IDENTITY;`);
         await execute(`
             INSERT INTO Cards (name, description, rarity, image_url) VALUES
             ('Fire Drake', 'A fierce dragon that breathes fire, ruling the skies with dominance.', 'Legendary', 'https://th.bing.com/th/id/OIP.7r01fS8CijyIEOp00gBpogHaF7?w=732&h=586&rs=1&pid=ImgDetMain'),
@@ -448,7 +448,7 @@ export async function reinitialize() {
 
     // await createTables();
 
-    await setupTriggers();
+    // await setupTriggers();
 
     await fillCards();
 
