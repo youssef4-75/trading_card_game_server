@@ -130,7 +130,7 @@ AFTER UPDATE OF user_id ON UserInventory
 FOR EACH ROW
 WHEN (OLD.user_id IS DISTINCT FROM NEW.user_id) -- Ensure trigger activates only if the owner changes
 EXECUTE FUNCTION delete_trades_on_card_owner_change();
-`;
+        `;
 
         await execute(deleteTradeWhenChangingOwner);
         console.log('Trigger to delete trade has been created.');
@@ -444,12 +444,12 @@ export async function emptyDB() {
 }
 
 export async function reinitialize() {
-    await emptyDB();
+    // await emptyDB();
 
-    await createTables();
+    // await createTables();
 
-    // await setupTriggers();
+    await setupTriggers();
 
-    // await fillCards();
+    await fillCards();
 
 }
