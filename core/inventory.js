@@ -18,8 +18,7 @@ export function getInventory(app){
             const query = getUserInventoryQuery();
             const result = await execute(query, [email]);
 
-            console.log(`the result of the query to get the user inventory: `, result);
-
+            console.log(`this user have ${result.length} card(s)`);
             res.json({
                 success: true,
                 data: result

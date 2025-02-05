@@ -9,15 +9,15 @@ export function lookForAuthentication(app) {
         try {
             console.log("got a connection request ------------------------------------------------------------------------------");
             const { email, password, newUser } = req.body;
-            console.log("logging the user with the email: ", email);
-            console.log("is he a new user?: ", newUser);
-            console.log(req.body, email, password, newUser);
+            console.log(`logging the user with the email: ${email}`);
+            console.log(`is he a new user?: ${newUser}`);
+            console.log(`what is his password: ${password}`);
 
             if (!newUser) {
                 const storedPassword = await getPassword(email);
 
                 if (!checkPasswordEquality(password, storedPassword)) {
-                    return res.status(401).json({ message: 'Invalid email or password' });
+                return res.status(401).json({ message: 'Invalid email or password' });
                 }
 
             } else {
@@ -51,7 +51,7 @@ export function sendingProfileData(app) {
         try {
             const email = getEmailFromToken(token);
             if (!email) return res.status(401).json({ message: 'Token is not valid' });
-            console.log("loading user data associate with the email: ", email);
+            console.log(`loading user data associate with the email: ${email}`);
 
 
             const userData = await loadUserData(email);
@@ -83,7 +83,9 @@ export function saveProfile(app) {
                 return res.status(401).json({ message: 'Token is not valid' });
             }
 
-            console.log("saving profile data for the user: ", email);
+            console.log(`user with email ${email} updated 
+his data to username: ${username}, display name: ${display_name},
+profile url: ${profile_url}, description: ${description}`)
 
             let flag = await updateUserData(email, username, display_name, profile_url, description);
 

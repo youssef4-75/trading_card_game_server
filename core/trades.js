@@ -2,7 +2,7 @@ import { addTrade, exchangeCard, getAllTrades } from "../database/database_commu
 import { getEmailFromToken } from "../security/tokenization.js";
 
 export function sendAllTradesToUser(app){
-    app.get("/trades", async (req, res) => {
+    app.get("/trades", async (_, res) => {
         try {
             const result = await getAllTrades();
 
@@ -22,8 +22,6 @@ export function sendAllTradesToUser(app){
 export function addNewTrades(app){    
     app.post("/trades", async (req, res) => {
         const { token, of, re } = req.body;
-
-        console.log(of, re);
         
         // of: refers to offered cards in that trade
         // re: refers to requested cards in that trade
@@ -35,7 +33,7 @@ export function addNewTrades(app){
         try {
             const email = getEmailFromToken(token);
             if(!email) return res.status(401).json({ message: 'Token is not valid' });
-            console.log("adding a trade from: ", email);
+            console.log(`the trade that the player with email ${email} want to add is [${of}] for [${re}] `);
 
             await addTrade(email, re, of);
 
@@ -44,7 +42,7 @@ export function addNewTrades(app){
                 message: true
             });
         } catch (error) {
-            console.error('Error verifying token:', error);
+            console.error('Error adding trades:', error);
             res.status(401).json({ message: 'Invalid operation' });
         }
     });
@@ -52,7 +50,7 @@ export function addNewTrades(app){
 
 export function acceptTrade(app){
     app.put("/trades", async (req, res) => {
-        const { token, id } = req.body;
+        const { token, id: trade_id } = req.body;
         
         if (!token) {
             return res.status(401).json({ message: 'Token is missing' });
@@ -61,9 +59,9 @@ export function acceptTrade(app){
         try {
             const email = getEmailFromToken(token);
             if(!email)return res.status(401).json({ message: 'Token is not valid' });
-            console.log(email, " accepted a trade");
+            console.log(`the player with email ${email} try to accept the trade with id ${trade_id}`);
 
-            const message = await exchangeCard(email, id);
+            const message = await exchangeCard(email, trade_id);
             if(message) return res.status(400).json({message: message})
 
             res.json({
