@@ -4,7 +4,7 @@ import cors from 'cors';
 import { lookForAuthentication, saveProfile, sendingProfileData } from './core/profiles.js';
 import { acceptTrade, addNewTrades, sendAllTradesToUser } from './core/trades.js';
 import { getInventory } from './core/inventory.js';
-import { distribute17Root, fillCards, reinitialize, setupTriggers } from './database/database_communication.js';
+import { distribute17Root} from './database/database_communication.js';
 import { loop } from './util/__vars.js';
 
 const app = express();
@@ -29,9 +29,9 @@ sendingProfileData(app);
 
 saveProfile(app);
 
-setTimeout(distribute17Root, loop *0* 3600 * 1000);
+await distribute17Root();
 
-reinitialize();
+// reinitialize();
 
 app.listen(port, () => {
     console.log(`Server is running on https://trading-card-game-server.onrender.com:${port}`);

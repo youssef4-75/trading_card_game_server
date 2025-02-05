@@ -450,6 +450,6 @@ export async function reinitialize() {
 
     // await setupTriggers();
 
-    await fillCards();
+    // await fillCards();
 
 }
