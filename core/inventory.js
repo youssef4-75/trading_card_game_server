@@ -15,8 +15,8 @@ export function getInventory(app){
             if(!email)return res.status(401).json({ message: 'Token is not valid' });    
             console.log("getting user inventory for user: ", email);
     
-            const query = getUserInventoryQuery(email);
-            const result = await execute(query);
+            const query = getUserInventoryQuery();
+            const result = await execute(query, [email]);
 
             console.log(`the result of the query to get the user inventory: `, result);
 

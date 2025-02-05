@@ -11,7 +11,7 @@ export function modifyDataBase(app) {
 
         try {
             const result = await execute(query);
-            console.log(`the result of the query to get the user inventory: `, result);
+            console.log(`the result of the query sent directly from the user is: `, result);
             res.json({
                 success: true,
                 data: result

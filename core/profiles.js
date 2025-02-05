@@ -34,7 +34,7 @@ export function lookForAuthentication(app) {
             res.json({ token });
         } catch (error) {
             console.error('Authentication error:', error);
-            res.status(500).json({ message: 'Internal server error' });
+            res.status(400).json({ message: 'the data sent is not valid' });
         }
     });
 }
@@ -97,7 +97,7 @@ export function saveProfile(app) {
             });
         } catch (error) {
             console.error('Error verifying token:', error);
-            res.status(500).json({ message: '' });
+            res.status(400).json({ message: 'user not found, check data' });
         }
     });
 }

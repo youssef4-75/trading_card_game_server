@@ -34,7 +34,6 @@ modifyDataBase(app);
 
 await distribute17Root();
 
-// reinitialize();
 
 app.listen(port, () => {
     console.log(`Server is running on https://trading-card-game-server.onrender.com:${port}`);

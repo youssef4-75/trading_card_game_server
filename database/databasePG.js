@@ -25,9 +25,9 @@ async function connect() {
 connect();
 
 // Function to execute a query
-export async function execute(query) {
+export async function execute(query, args=[]) {
     try {
-        const results = await pool.query(query);
+        const results = await pool.query(query, args);
         return results.rows; // Return only the rows from the result
     } catch (error) {
         console.error('Error executing query:', error.message);

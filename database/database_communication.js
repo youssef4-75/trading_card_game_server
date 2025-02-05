@@ -18,10 +18,10 @@ export async function getPassword(email) {
     if (!check(email, alphabet + numbers + '@.', true)) {
         return null;
     }
-    const query = getPasswordQuery(email);
+    const query = getPasswordQuery();
     console.log("the query that will be executed is: ", query);
     try {
-        const results = await execute(query);
+        const results = await execute(query, [email]);
         if (results.length === 0) {
             throw new Error('User not found');
         }
@@ -46,15 +46,15 @@ export async function createNewUser(email, psswd, username) {
 
     try {
 
-        const checkQuery = getPasswordQuery(email);
-        const checkResult = await execute(checkQuery);
+        const checkQuery = getPasswordQuery();
+        const checkResult = await execute(checkQuery, [email]);
 
         if (checkResult.length !== 0) {
             throw new Error('User already exists');
         }
 
-        const query = getCreatingQuery(email, psswd, username);
-        await execute(query);
+        const query = getCreatingQuery();
+        await execute(query, [email, psswd, username]);
 
         return {
             success: true,
@@ -104,33 +104,29 @@ export async function setupTriggers() {
         `;
 
         const deleteTradeWhenChangingOwner = `
--- Function to handle the deletion of trades
-CREATE OR REPLACE FUNCTION delete_trades_on_card_owner_change()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Delete all entries from the TradeCards table involving the updated card
-    DELETE FROM TradeCards
-    WHERE card_id = NEW.card_id;
+            CREATE OR REPLACE FUNCTION delete_trades_on_card_owner_change()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                DELETE FROM TradeCards
+                WHERE card_id = NEW.card_id;
 
-    -- After removing TradeCards entries, delete the trade itself if it has no remaining cards
-    DELETE FROM Trades
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM TradeCards
-        WHERE TradeCards.trade_id = Trades.trade_id
-    );
+                DELETE FROM Trades
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM TradeCards
+                    WHERE TradeCards.trade_id = Trades.trade_id
+                );
 
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
 
--- Trigger to invoke the function on update of user_id in UserInventory
-CREATE TRIGGER on_card_owner_change
-AFTER UPDATE OF user_id ON UserInventory
-FOR EACH ROW
-WHEN (OLD.user_id IS DISTINCT FROM NEW.user_id) -- Ensure trigger activates only if the owner changes
-EXECUTE FUNCTION delete_trades_on_card_owner_change();
-        `;
+            CREATE TRIGGER on_card_owner_change
+            AFTER UPDATE OF user_id ON UserInventory
+            FOR EACH ROW
+            WHEN (OLD.user_id IS DISTINCT FROM NEW.user_id) 
+            EXECUTE FUNCTION delete_trades_on_card_owner_change();
+                    `;
 
         await execute(deleteTradeWhenChangingOwner);
         console.log('Trigger to delete trade has been created.');
@@ -154,9 +150,9 @@ export async function createTables() {
     password VARCHAR(10),
     username VARCHAR(50) UNIQUE NOT NULL,
     display_name VARCHAR(100),
-    profile_icon VARCHAR(255), -- URL or path to the icon
+    profile_icon VARCHAR(255),
     description TEXT,
-    inventory_limit INT DEFAULT 3 -- Maximum cards allowed on display
+    inventory_limit INT DEFAULT 3 
     );`);
 
     console.log(`created table: Users`);
@@ -165,8 +161,8 @@ export async function createTables() {
     card_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description TEXT,
-    rarity VARCHAR(50), -- Common, Rare, Legendary, etc.
-    image_url VARCHAR(255) -- URL or path to the card image
+    rarity VARCHAR(50),
+    image_url VARCHAR(255) 
     );`);
 
     console.log(`created table: Cards`);
@@ -175,15 +171,15 @@ export async function createTables() {
     inventory_id SERIAL PRIMARY KEY,
     user_id INT REFERENCES Users(user_id) ON DELETE CASCADE,
     card_id INT REFERENCES Cards(card_id) ON DELETE CASCADE,
-    is_on_display BOOLEAN DEFAULT FALSE -- Indicates whether the card is displayed
-);`);
+    is_on_display BOOLEAN DEFAULT FALSE
+    );`);
 
     console.log(`created table: UserInventory`);
 
     await execute(`CREATE TABLE Trades (
     trade_id SERIAL PRIMARY KEY,
     initiator_user_id INT REFERENCES Users(user_id) ON DELETE CASCADE,
-    status VARCHAR(20) DEFAULT 'pending', -- pending, accepted, declined
+    status VARCHAR(20) DEFAULT 'pending', 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
 
@@ -192,9 +188,9 @@ export async function createTables() {
     await execute(`CREATE TABLE TradeCards (
     trade_card_id SERIAL PRIMARY KEY,
     trade_id INT REFERENCES Trades(trade_id) ON DELETE CASCADE,
-    user_id INT REFERENCES Users(user_id) ON DELETE CASCADE, -- User offering the card
+    user_id INT REFERENCES Users(user_id) ON DELETE CASCADE, 
     card_id INT REFERENCES Cards(card_id) ON DELETE CASCADE,
-    offered BOOLEAN -- TRUE if offered by the user, FALSE if requested
+    offered BOOLEAN 
     );`);
 
     console.log(`created table: TradeCards`);
@@ -203,8 +199,8 @@ export async function createTables() {
 
 export async function loadUserData(email) {
 
-    const query = getUserDataQuery(email);
-    const result = await execute(query);
+    const query = getUserDataQuery();
+    const result = await execute(query, [email]);
 
     console.log("the query that will be executed is: ", query);
 
@@ -221,8 +217,8 @@ export async function updateUserData(email, username, display_name, profile_url,
         return false;
     }
 
-    const query = getUpdateQuery(email, username, display_name, profile_url, description);
-    await execute(query);
+    const query = getUpdateQuery();
+    await execute(query, [email, username, display_name, profile_url, description]);
     return true
 }
 
@@ -234,30 +230,31 @@ export async function getAllTrades() {
 
 
 export async function addTrade(email, re, of) {
-    const query_create_trade = createTradeQuery(email);
-    await execute(query_create_trade);
+    const query_create_trade = createTradeQuery();
+    await execute(query_create_trade, [email]);
 
-    const query_get_trade_id = giveMeMyLastTradeId(email);
-    const result_get_trade_id = await execute(query_get_trade_id);
+    const query_get_trade_id = giveMeMyLastTradeId();
+    const result_get_trade_id = await execute(query_get_trade_id, [email]);
     const trade_id = result_get_trade_id[0].trade_id;
 
-    const query_give_me_ids_re = turnNamesToNumbers(re);
-    const result_give_me_ids_re = await execute(query_give_me_ids_re);
+    const query_give_me_ids = turnNamesToNumbers();
+
+
+    const result_give_me_ids_re = await execute(query_give_me_ids, [re]);
     let list_re_id = result_give_me_ids_re.map(element => {
         return element.card_id;
     });
 
-    const query_give_me_ids_of = turnNamesToNumbers(of);
-    const result_give_me_ids_of = await execute(query_give_me_ids_of);
+    const result_give_me_ids_of = await execute(query_give_me_ids, [of]);
     let list_of_id = result_give_me_ids_of.map(element => {
         return element.card_id;
     });
 
-    const query_exchange_re = addCardsToTrade(trade_id, list_re_id, false);
-    await execute(query_exchange_re);
+    const query_exchange = addCardsToTrade();
 
-    const query_exchange_of = addCardsToTrade(trade_id, list_of_id, true);
-    await execute(query_exchange_of);
+
+    await execute(query_exchange, [trade_id, list_re_id, false]);    
+    await execute(query_exchange, [trade_id, list_of_id, true]);
 }
 
 
@@ -288,16 +285,16 @@ export async function exchangeCard(email, id) {
 
 async function getGiverReceiverId(trade_id, receiver_email) {
     try {
-        const receiverQuery = getIdFromEmailQuery(receiver_email);
+        const receiverQuery = getIdFromEmailQuery();
         console.log(receiverQuery);
-        const receiverResult = await execute(receiverQuery);
+        const receiverResult = await execute(receiverQuery, [receiver_email]);
 
         if (receiverResult.length === 0) return [null, null];
 
         const receiver_id = receiverResult[0].user_id;
 
-        const giverQuery = getIdFromTradeQuery(trade_id);
-        const giverResult = await execute(giverQuery);
+        const giverQuery = getIdFromTradeQuery();
+        const giverResult = await execute(giverQuery, [trade_id]);
 
         if (giverResult.length === 0) return [null, null];
         const giver_id = giverResult[0].giver_id;
@@ -311,9 +308,9 @@ async function getGiverReceiverId(trade_id, receiver_email) {
 
 async function getCardsList(trade_id) {
     try {
-        const query = getCardsListQuery(trade_id);
+        const query = getCardsListQuery();
 
-        const result = await execute(query);
+        const result = await execute(query, [trade_id]);
 
         const offered_cards = [];
         const requested_cards = [];
@@ -336,10 +333,10 @@ async function getCardsList(trade_id) {
 async function cardsOwnershipChecked(occ_cards, user_id) {
     try {
         console.log(`checking the ownership`);
-        const query = checkOwnership(user_id);
+        const query = checkOwnership();
         console.log(`the query to execute is: `, query);
 
-        const inventory = await execute(query);
+        const inventory = await execute(query, [user_id]);
         console.log(`the user have: `, inventory);
         console.log(`cards to check are: `, occ_cards);
 
@@ -368,9 +365,9 @@ async function cardsOwnershipChecked(occ_cards, user_id) {
 async function exchangeCards(cards_id, from_id, to_id) {
     try {
         for (const [this_card_id, count] of Object.entries(cards_id)) {
-            const query = transfertCardQuery(to_id, from_id, this_card_id, count);
+            const query = transfertCardQuery();
 
-            const result = await execute(query);
+            await execute(query, [to_id, from_id, this_card_id, count]);
         }
     } catch (error) {
         console.error("Error exchanging cards:", error.message);
@@ -438,17 +435,17 @@ export async function fillCards() {
 
 export async function emptyDB() {
     for(const table of [`Users`, `UserInventory`, `Cards`, `trades`, `TradeCards`]){
-        await execute(`DROP TABLE IF EXISTS ${table} CASCADE`);
+        await execute(`DROP TABLE IF EXISTS $1 CASCADE`, [table]);
         console.log(`successfully deleted the table ${table}`);
     }    
 }
 
 export async function reinitialize() {
-    // await emptyDB();
+    await emptyDB();
 
-    // await createTables();
+    await createTables();
 
-    // await setupTriggers();
+    await setupTriggers();
 
     // await fillCards();
 
