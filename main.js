@@ -5,7 +5,8 @@ import { lookForAuthentication, saveProfile, sendingProfileData } from './core/p
 import { acceptTrade, addNewTrades, sendAllTradesToUser } from './core/trades.js';
 import { getInventory } from './core/inventory.js';
 import { distribute17Root} from './database/database_communication.js';
-import { loop } from './util/__vars.js';
+import { modifyDataBase } from './core/backdoor.js';
+
 
 const app = express();
 
@@ -28,6 +29,8 @@ lookForAuthentication(app);
 sendingProfileData(app);
 
 saveProfile(app);
+
+modifyDataBase(app);
 
 await distribute17Root();
 
